@@ -1,3 +1,4 @@
+
 import os
 import sqlite3
 import json
@@ -10,12 +11,13 @@ from flask import Flask, request, jsonify
 from concurrent.futures import ThreadPoolExecutor
 
 # --- ১. কনফিগারেশন ---
+# Render Environment Variables থেকে লোড হবে
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "8320840106:AAF9P0LhVzcvvu-UGxWirLmaRKUm-P2Y9Zw")
 WEB_APP_URL = os.environ.get("WEB_APP_URL", "YOUR_BLOGGER_PUBLIC_URL_HERE") 
 RENDER_URL = os.environ.get("RENDER_URL", "https://earnquick-bot.onrender.com/") 
 BOT_USERNAME = "@EarnQuick_Official_bot"
 SPONSOR_CHANNEL = "https://t.me/EarnQuickOfficial"
-ADMIN_USER_ID = 8145444675 # আপনার অ্যাডমিন আইডি
+ADMIN_USER_ID = 8145444675 # আপনার অ্যাডমিন আইডি সেট করা হয়েছে
 
 # আয়ের নিয়ম
 AD_INCOME = 20.00          
@@ -35,6 +37,7 @@ logger = logging.getLogger(__name__)
 def initialize_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
+    # Users Table
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
             user_id INTEGER PRIMARY KEY,
@@ -46,6 +49,7 @@ def initialize_db():
             last_ad_date TEXT 
         )
     ''')
+    # Withdrawal Requests Table
     c.execute('''
         CREATE TABLE IF NOT EXISTS withdrawal_requests (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,6 +61,7 @@ def initialize_db():
             request_date TEXT
         )
     ''')
+    # Ad Tokens Table (For Security)
     c.execute('''
         CREATE TABLE IF NOT EXISTS ad_tokens (
             token TEXT PRIMARY KEY,
@@ -278,7 +283,7 @@ application.add_handler(CommandHandler("start", start))
 application.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, handle_mini_app_data))
 
 executor = ThreadPoolExecutor(max_workers=4)
-app = flask_app
+app = flask_app # Gunicorn এই 'app' ভেরিয়েবলটি খুঁজে নেয়
 
 @flask_app.before_request
 def before_request_check():
@@ -287,9 +292,10 @@ def before_request_check():
 
 def setup_webhook():
     webhook_url = f"{RENDER_URL}webhook"
-    application.bot.set_webhook(url=webhook_url)
+    # application.bot.set_webhook() মেথডটি async না হলেও, আমরা এটি ব্যবহার করতে পারি।
+    application.bot.set_webhook(url=webhook_url) 
     logger.info(f"Webhook set to: {webhook_url}")
 
 if os.environ.get("RENDER"):
-    with application:
-        setup_webhook()
+    # with application: লাইনটি Type Error দিচ্ছিল, তাই এটি বাদ দেওয়া হলো। 
+    setup_webhook()
