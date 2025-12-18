@@ -1,4 +1,3 @@
-
 import os
 import sqlite3
 import json
@@ -283,7 +282,7 @@ application.add_handler(CommandHandler("start", start))
 application.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, handle_mini_app_data))
 
 executor = ThreadPoolExecutor(max_workers=4)
-app = flask_app # Gunicorn এই 'app' ভেরিয়েবলটি খুঁজে নেয়
+app = flask_app 
 
 @flask_app.before_request
 def before_request_check():
@@ -292,10 +291,8 @@ def before_request_check():
 
 def setup_webhook():
     webhook_url = f"{RENDER_URL}webhook"
-    # application.bot.set_webhook() মেথডটি async না হলেও, আমরা এটি ব্যবহার করতে পারি।
     application.bot.set_webhook(url=webhook_url) 
     logger.info(f"Webhook set to: {webhook_url}")
 
 if os.environ.get("RENDER"):
-    # with application: লাইনটি Type Error দিচ্ছিল, তাই এটি বাদ দেওয়া হলো। 
     setup_webhook()
